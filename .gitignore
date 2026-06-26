@@ -1,0 +1,23 @@
+# Dependencias
+node_modules
+/.pnpm-debug.log*
+
+# Compilación de Next.js
+.next/
+out/
+
+# Agentes de IA
+AGENTS.md
+CLAUDE.md
+
+# Variables de entorno y secretos (¡No los subas!)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Archivos de configuración del sistema / editores
+.DS_Store
+*.local
+.vscode/
