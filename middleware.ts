@@ -1,20 +1,67 @@
-import { NextResponse, type NextRequest } from 'next/server';
-import { updateSession } from '@/lib/supabase/middleware';
+import { NextResponse, type NextRequest } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 
 export async function middleware(request: NextRequest) {
-  // 1. Ejecuta la lógica de Supabase para refrescar la cookie de sesión
-  return await updateSession(request);
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          // Para la petición (request), pasamos el objeto estructurado completo
+          cookiesToSet.forEach(({ name, value, options }) => 
+            request.cookies.set({ name, value, ...options })
+          )
+          
+          response = NextResponse.next({
+            request,
+          })
+          
+          // Para la respuesta (response), la firma sí acepta los argumentos separados
+          cookiesToSet.forEach(({ name, value, options }) => 
+            response.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
+  // 1. Obtener el usuario actual
+  const { data: { user } } = await supabase.auth.getUser()
+
+  // 2. Verificar si intenta acceder a una ruta protegida de administración
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    if (!user) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.role !== 'admin') {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
+  }
+
+  return response
 }
 
+// Corregido: Sin el modificador 'public'
 export const config = {
   matcher: [
-    /*
-     * Coincide con todas las rutas de solicitud excepto las que empiezan por:
-     * - _next/static (archivos estáticos)
-     * - _next/image (imágenes optimizadas de Next.js)
-     * - favicon.ico (icono de la pestaña)
-     * - archivos con extensiones comunes (svg, png, jpg, jpeg, gif, webp)
-     */
+    '/admin/:path*',
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
-};
+}
