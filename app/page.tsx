@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { Logout } from "./(auth)/actions";
+import Link from "next/link";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -12,8 +13,11 @@ export default async function HomePage() {
   // 2. Extraer el nombre directamente de la metadata de la sesión (Sin pegarle a la BD)
   const fallbackName = user?.user_metadata?.full_name || "Usuario";
 
-  // 3. Traer los productos (tu consulta de la Fase 1)
-  const { data: products } = await supabase.from("products").select("*");
+  // 3. Traer los productos ordenados del más nuevo al más viejo
+  const { data: products } = await supabase
+    .from("products")
+    .select("*")
+    .order("created_at", { ascending: false });
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-50">
@@ -69,11 +73,14 @@ export default async function HomePage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {products?.map((product) => (
-            <div
+            <Link
+              href={`/product/${product.id}`}
               key={product.id}
-              className="border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-xl p-5 space-y-3 shadow-sm hover:shadow-md transition"
+              className="group border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-xl p-5 space-y-3 shadow-sm hover:shadow-md hover:border-neutral-300 dark:hover:border-neutral-700 transition cursor-pointer"
             >
-              <h2 className="text-xl font-semibold">{product.name}</h2>
+              <h2 className="text-xl font-semibold group-hover:text-neutral-600 dark:group-hover:text-neutral-300 transition">
+                {product.name}
+              </h2>
               <p className="text-neutral-600 dark:text-neutral-400 text-sm line-clamp-2">
                 {product.description}
               </p>
@@ -83,7 +90,7 @@ export default async function HomePage() {
                   Stock: {product.stock}
                 </span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </main>
