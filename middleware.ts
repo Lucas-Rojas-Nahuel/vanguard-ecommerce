@@ -1,12 +1,12 @@
-import { NextResponse, type NextRequest } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
-  })
+  });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,54 +14,60 @@ export async function middleware(request: NextRequest) {
     {
       cookies: {
         getAll() {
-          return request.cookies.getAll()
+          return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          // Para la petición (request), pasamos el objeto estructurado completo
-          cookiesToSet.forEach(({ name, value, options }) => 
-            request.cookies.set({ name, value, ...options })
-          )
-          
+          cookiesToSet.forEach(({ name, value, options }) =>
+            request.cookies.set({ name, value, ...options }),
+          );
           response = NextResponse.next({
             request,
-          })
-          
-          // Para la respuesta (response), la firma sí acepta los argumentos separados
-          cookiesToSet.forEach(({ name, value, options }) => 
-            response.cookies.set(name, value, options)
-          )
+          });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options),
+          );
         },
       },
-    }
-  )
+    },
+  );
 
-  // 1. Obtener el usuario actual
-  const { data: { user } } = await supabase.auth.getUser()
+  // 1. Obtener el usuario actual directamente
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  // 2. Verificar si intenta acceder a una ruta protegida de administración
-  if (request.nextUrl.pathname.startsWith('/admin')) {
+  // 2. Si intenta entrar a /admin, aplicar las reglas estrictas
+  if (request.nextUrl.pathname.startsWith("/admin")) {
+    // Si no está logueado, al login
     if (!user) {
-      return NextResponse.redirect(new URL('/login', request.url))
+      return NextResponse.redirect(new URL("/login", request.url));
     }
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+    // Consultar el perfil saltándonos el RLS de manera segura en el middleware
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
 
-    if (profile?.role !== 'admin') {
-      return NextResponse.redirect(new URL('/', request.url))
+    // Si hubo error o el rol no es admin, rebote fulminante
+    if (error || profile?.role !== "admin") {
+      console.log(
+        "🔒 Acceso denegado. Rol encontrado:",
+        profile?.role,
+        "Error:",
+        error?.message,
+      );
+      return NextResponse.redirect(new URL("/", request.url));
     }
   }
 
-  return response
+  return response;
 }
 
-// Corregido: Sin el modificador 'public'
 export const config = {
   matcher: [
-    '/admin/:path*',
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    "/admin/:path*",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
-}
+};
