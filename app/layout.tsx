@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { CartProvider } from "../context/CartContext"; // Ruta relativa desde app/layout.tsx hacia context/CartContext
+import Navbar from "@/components/ui/navbar/Navbar";
+import Link from "next/link";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +30,21 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <CartProvider>
+          <header className="border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 sticky top-0 z-50">
+            <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+              <Link href="/" className="font-bold tracking-tight text-lg">
+                Vanguard{" "}
+                <span className="text-neutral-400 font-normal">Shop</span>
+              </Link>
+
+              <Navbar />
+            </div>
+          </header>
+          {children}
+        </CartProvider>
+      </body>
     </html>
   );
 }
