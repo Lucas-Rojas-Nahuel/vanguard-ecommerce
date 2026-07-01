@@ -1,12 +1,10 @@
-
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Logout } from "../../../app/(auth)/actions";
 import CartIcon from "./CartIcon";
+import ThemeToggle from "./ThemeToggle";
 
 export default async function Navbar() {
-   
-
   const supabase = await createClient();
 
   // 1. Obtener el usuario autenticado actual desde la cookie
@@ -22,8 +20,10 @@ export default async function Navbar() {
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         {/* Enlaces de navegación derecha */}
         <div className="flex items-center gap-6 text-sm font-medium">
+          {/* darkmode toggle */}
+          <ThemeToggle />
           {/* BOTÓN DEL CARRITO DINÁMICO */}
-          <CartIcon/>
+          <CartIcon />
 
           {/* Aquí van tus botones previos de Login / Admin / Logout */}
           {user ? (

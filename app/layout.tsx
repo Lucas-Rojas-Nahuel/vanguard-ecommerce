@@ -4,6 +4,7 @@ import "./globals.css";
 import { CartProvider } from "../context/CartContext"; // Ruta relativa desde app/layout.tsx hacia context/CartContext
 import Navbar from "@/components/ui/navbar/Navbar";
 import Link from "next/link";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,21 +30,29 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <CartProvider>
-          <header className="border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 sticky top-0 z-50">
-            <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-              <Link href="/" className="font-bold tracking-tight text-lg">
-                Vanguard{" "}
-                <span className="text-neutral-400 font-normal">Shop</span>
-              </Link>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system" // Se adapta automáticamente al tema de la PC/celular del usuario
+          enableSystem
+          disableTransitionOnChange
+        >
+          <CartProvider>
+            <header className="border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 sticky top-0 z-50">
+              <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+                <Link href="/" className="font-bold tracking-tight text-lg">
+                  Vanguard{" "}
+                  <span className="text-neutral-400 font-normal">Shop</span>
+                </Link>
 
-              <Navbar />
-            </div>
-          </header>
-          {children}
-        </CartProvider>
+                <Navbar />
+              </div>
+            </header>
+            {children}
+          </CartProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
