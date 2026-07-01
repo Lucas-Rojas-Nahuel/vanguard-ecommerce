@@ -41,14 +41,7 @@ export default function RootLayout({
         >
           <CartProvider>
             <header className="border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 sticky top-0 z-50">
-              <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-                <Link href="/" className="font-bold tracking-tight text-lg">
-                  Vanguard{" "}
-                  <span className="text-neutral-400 font-normal">Shop</span>
-                </Link>
-
-                <Navbar />
-              </div>
+              <Navbar />
             </header>
             {children}
           </CartProvider>
