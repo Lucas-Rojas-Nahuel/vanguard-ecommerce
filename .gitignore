@@ -21,3 +21,4 @@ CLAUDE.md
 .DS_Store
 *.local
 .vscode/
+components/prueba.tsx
