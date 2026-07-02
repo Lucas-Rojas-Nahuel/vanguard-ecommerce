@@ -36,7 +36,7 @@ export default function MobileMenuComponent({
   // Definimos los enlaces base del cliente
   const menuItems = [
     { label: "Inicio", href: "/" },
-    { label: "Productos", href: "/products" },
+    { label: "Productos", href: "/product" },
     { label: userEmail ? "Mi Cuenta" : "Iniciar Sesión", href: "/login" },
     ...(isAdmin
       ? [

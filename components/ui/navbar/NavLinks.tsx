@@ -9,7 +9,7 @@ export default function NavLinks() {
   // Definimos tus enlaces en un array para no repetir código
   const links = [
     { href: "/", label: "Inicio" },
-    { href: "/products", label: "Productos" },
+    { href: "/product", label: "Productos" },
   ];
 
   return (
