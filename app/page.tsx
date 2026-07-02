@@ -1,3 +1,4 @@
+import ProductCard from "@/components/ui/product/ProductCard";
 import { createClient } from "@/lib/supabase/server";
 
 import Link from "next/link";
@@ -12,10 +13,11 @@ export default async function HomePage() {
   } = await supabase.auth.getUser();
 
   // 3. Traer los productos ordenados del más nuevo al más viejo
-  const { data: products } = await supabase
+  const { data: latestProducts } = await supabase
     .from("products")
     .select("*")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(4);
 
   // 📡 Pedimos a Supabase el producto con mayor puntuación
   const { data: featuredProduct } = await supabase
@@ -25,7 +27,8 @@ export default async function HomePage() {
     .limit(1) // Solo queremos el número 1
     .single();
 
-  console.log(featuredProduct);
+  // 4. Traer las categorías para poder mostrar el nombre de la categoría en cada producto
+  const { data: categories } = await supabase.from("categories").select("*");
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-50">
@@ -82,7 +85,10 @@ export default async function HomePage() {
                   <>
                     <div className="aspect-square bg-card border border-border rounded-sm overflow-hidden">
                       <img
-                        src={featuredProduct.images[0]}
+                        src={
+                          featuredProduct.images[0] ||
+                          "https://placehold.co/100x100?text=Tech"
+                        }
                         alt={featuredProduct.name}
                         className="w-full h-full object-cover"
                       />
@@ -138,6 +144,52 @@ export default async function HomePage() {
                 )}
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* ultimos lanzamientos */}
+        <section className="py-12">
+          <div className="flex items-center justify-between mb-7">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground">
+              Últimos Lanzamientos
+            </h2>
+            <Link
+              href={"/product"}
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Ver todo <FaArrowRight size={12} />
+            </Link>
+          </div>
+          {/* Mobile: list, Desktop: 4-col grid */}
+          <div className="flex flex-col gap-2.5 lg:hidden">
+            {latestProducts && (
+              <>
+                {latestProducts.map((p) => (
+                  <ProductCard
+                    key={p.id}
+                    product={p}
+                    categories={
+                      (categories as { id: number; name: string }[]) ?? []
+                    }
+                  />
+                ))}
+              </>
+            )}
+          </div>
+          <div className="hidden lg:grid lg:grid-cols-4 gap-5">
+            {latestProducts && (
+              <>
+                {latestProducts.map((p) => (
+                  <ProductCard
+                    key={p.id}
+                    product={p}
+                    categories={
+                      (categories as { id: number; name: string }[]) ?? []
+                    }
+                  />
+                ))}
+              </>
+            )}
           </div>
         </section>
       </main>
