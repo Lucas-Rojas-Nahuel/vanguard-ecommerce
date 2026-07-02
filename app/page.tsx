@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
- 
+
 import Link from "next/link";
+import { FaArrowRight } from "react-icons/fa6";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -10,43 +11,135 @@ export default async function HomePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  
   // 3. Traer los productos ordenados del más nuevo al más viejo
   const { data: products } = await supabase
     .from("products")
     .select("*")
     .order("created_at", { ascending: false });
 
+  // 📡 Pedimos a Supabase el producto con mayor puntuación
+  const { data: featuredProduct } = await supabase
+    .from("products")
+    .select("*")
+    .order("rating", { ascending: false }) // Del más alto al más bajo
+    .limit(1) // Solo queremos el número 1
+    .single();
+
+  console.log(featuredProduct);
+
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-50">
-      {/* CONTENIDO PRINCIPAL: CATÁLOGO */}
       <main className="max-w-6xl mx-auto p-6 mt-6 space-y-6">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Catálogo de Tecnología
-        </h1>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {products?.map((product) => (
-            <Link
-              href={`/product/${product.id}`}
-              key={product.id}
-              className="group border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-xl p-5 space-y-3 shadow-sm hover:shadow-md hover:border-neutral-300 dark:hover:border-neutral-700 transition cursor-pointer"
-            >
-              <h2 className="text-xl font-semibold group-hover:text-neutral-600 dark:group-hover:text-neutral-300 transition">
-                {product.name}
-              </h2>
-              <p className="text-neutral-600 dark:text-neutral-400 text-sm line-clamp-2">
-                {product.description}
+        {/* CONTENIDO PRINCIPAL: HERO SECTION */}
+        <section className=" py-10 lg:py-0 lg:min-h-[calc(100vh-64px)] lg:flex lg:items-center border-b border-border">
+          <div className="lg:grid lg:grid-cols-[55%_45%] lg:gap-16 lg:items-center w-full lg:py-10">
+            {/* Left: text */}
+            <div>
+              <span className="text-[10px] text-muted-foreground tracking-[0.2em] uppercase font-['Geist_Mono',monospace] block mb-4">
+                Tecnología Premium · Desde 2024
+              </span>
+              <h1 className="text-[2.2rem] lg:text-5xl font-bold leading-[1.1] tracking-tight text-foreground mb-5">
+                Hardware de
+                <br />
+                Última
+                <br className="hidden lg:block" /> Generación.
+              </h1>
+              <p className="text-sm lg:text-base text-muted-foreground leading-relaxed mb-8 max-w-[460px]">
+                Componentes, portátiles y periféricos de primera línea. Envío
+                express en 24&nbsp;h, garantía oficial de fábrica y soporte
+                técnico especializado.
               </p>
-              <div className="flex justify-between items-center pt-2">
-                <span className="text-lg font-bold">${product.price}</span>
-                <span className="text-xs text-neutral-500">
-                  Stock: {product.stock}
-                </span>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href={"/product"}
+                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 text-sm font-semibold tracking-wide rounded-sm hover:opacity-90 transition-opacity"
+                >
+                  Explorar Catálogo <FaArrowRight size={15} />
+                </Link>
               </div>
-            </Link>
-          ))}
-        </div>
+              {/* Stats - desktop only */}
+              <div className="hidden lg:flex items-center gap-8 mt-12 pt-8 border-t border-border">
+                {[
+                  ["2,400+", "Clientes"],
+                  ["48h", "Envío Max"],
+                  ["100%", "Garantía"],
+                ].map(([val, lbl]) => (
+                  <div key={lbl}>
+                    <p className="text-2xl font-bold font-['Geist_Mono',monospace] text-foreground">
+                      {val}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {lbl}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* right: Visual */}
+            <div className="hidden lg:block">
+              <div className="relative">
+                {featuredProduct && (
+                  <>
+                    <div className="aspect-square bg-card border border-border rounded-sm overflow-hidden">
+                      <img
+                        src={featuredProduct.images[0]}
+                        alt={featuredProduct.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    {/* Floating card */}
+                    <Link
+                      href={`/product/${featuredProduct.id}`}
+                      className="absolute -bottom-4 -left-6 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 shadow-2xl flex items-center gap-4 hover:border-neutral-400 dark:hover:border-neutral-600 transition-all duration-300 group"
+                    >
+                      {/* Miniatura del Producto */}
+                      <div className="w-12 h-12 bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg overflow-hidden shrink-0">
+                        <img
+                          // Usamos un fallback por si no tiene imagen en la base de datos todavía
+                          src={
+                            featuredProduct.image ||
+                            "https://placehold.co/100x100?text=Tech"
+                          }
+                          alt={featuredProduct.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        />
+                      </div>
+
+                      {/* Textos Informativos */}
+                      <div className="flex flex-col min-w-[140px]">
+                        <p className="text-xs font-semibold text-neutral-900 dark:text-white truncate max-w-[160px]">
+                          {featuredProduct.name}
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span
+                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded-sm ${
+                              featuredProduct.stock > 0
+                                ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400"
+                                : "bg-red-50 text-red-600"
+                            }`}
+                          >
+                            {featuredProduct.stock > 0
+                              ? "En stock"
+                              : "Sin Stock"}
+                          </span>
+                          {/* Badge de Rating Destacado */}
+                          <span className="text-[10px] bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-sm font-medium flex items-center gap-0.5">
+                            ★ {featuredProduct.rating}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Precio formateado al estilo Geist Mono */}
+                      <span className="ml-2 text-sm font-bold font-mono text-neutral-900 dark:text-white">
+                        ${featuredProduct.price.toLocaleString("es-AR")}
+                      </span>
+                    </Link>{" "}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
   );
